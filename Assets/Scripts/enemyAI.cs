@@ -45,13 +45,12 @@ public class EnemyAI : MonoBehaviour, IDamage
 
         if (playerInRange && canSeePlayer())
         {
-            if (!isShooting)
-            {
-                StartCoroutine(shoot());
-            }
+            //if (!isShooting)
+            //{
+            //    StartCoroutine(shoot());
+            //}
         }
     }
-
     private void OnTriggerEnter(Collider other)
     {
         if(other.CompareTag("Player"))
