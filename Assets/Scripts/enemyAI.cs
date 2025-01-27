@@ -7,32 +7,41 @@ public class EnemyAI : MonoBehaviour, IDamage
     [SerializeField] NavMeshAgent agent;
     [SerializeField] Animator anim;
     [SerializeField] Renderer model;
-    [SerializeField] Transform shootPos, headPos;
+    [SerializeField] Transform shootpos, headpos;
 
-    [SerializeField] int HP;
-    [SerializeField] int faceTargetSpeed;
-    [SerializeField] int FOV;
-    [SerializeField] int animSpeedTrans;
+    [SerializeField] int hp;
+    [SerializeField] int facetargetspeed;
+    [SerializeField] int fov;
+    [SerializeField] int animspeedtrans;
 
     [SerializeField] GameObject bullet;
-    [SerializeField] float shootRate;
+    [SerializeField] float shootrate;
     [SerializeField] int shootrange;
+    [SerializeField] int roampause;
+    [SerializeField] int roamdist;
 
-    float angleToPlayer;
+    float angle2player;
+    float stoppingdistorig;
 
-    bool isShooting;
-    bool playerInRange;
+    bool isshooting;
+    bool playerinrange;
+    bool isroaming;
 
-    Color colorOrig;
+    Color colororig;
 
-    Vector3 playerDir;
+    Vector3 playerdir;
+    Vector3 startingpos;
+
+    Coroutine cor;
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        colorOrig = model.sharedMaterial.color;
+        colororig = model.sharedMaterial.color;
         GameManager.instance.updateGameGoal(1);
+        stoppingdistorig = agent.stoppingDistance;
+        startingpos = transform.position;
     }
 
     // Update is called once per frame
@@ -41,77 +50,103 @@ public class EnemyAI : MonoBehaviour, IDamage
         float agentSpeed = agent.velocity.normalized.magnitude;
         float animSpeed = anim.GetFloat("Speed");
 
-        anim.SetFloat("Speed", Mathf.MoveTowards(animSpeed, agentSpeed, Time.deltaTime * animSpeedTrans));
+        anim.SetFloat("Speed", Mathf.MoveTowards(animSpeed, agentSpeed, Time.deltaTime * animSpeed));
 
-        if (playerInRange && canSeePlayer())
+        if (playerinrange && !canSeePlayer())
         {
-            //if (!isShooting)
-            //{
-            //    StartCoroutine(shoot());
-            //}
+            if (!isroaming && agent.remainingDistance < 0.1f)
+            {
+                cor = StartCoroutine(roam());
+            }
+        }
+        else if (!playerinrange)
+        {
+            if (!isroaming && agent.remainingDistance < 0.1f)
+            {
+                cor = StartCoroutine(roam());
+            }
         }
     }
-    private void OnTriggerEnter(Collider other)
+
+    IEnumerator roam()
     {
-        if(other.CompareTag("Player"))
-        {
-            playerInRange = true;
-        }
-    } 
-    private void OnTriggerExit(Collider other)
-    {
-        if(other.CompareTag("Player"))
-        {
-            playerInRange = false;
-        }
+        isroaming = true;
+        yield return new WaitForSeconds(roampause);
+        agent.stoppingDistance = 0;
+        Vector3 randomPos = Random.insideUnitSphere * roamdist;
+        randomPos += startingpos;
+        NavMeshHit hit;
+        NavMesh.SamplePosition(randomPos, out hit, roamdist, 1);
+        agent.SetDestination(hit.position);
+        isroaming = false;
     }
 
     bool canSeePlayer()
     {
-        playerDir = GameManager.instance.player.transform.position - transform.position;
-        angleToPlayer = Vector3.Angle(playerDir, transform.forward);
-
-        Debug.DrawRay(transform.position, playerDir);
-
+        playerdir = GameManager.instance.player.transform.position - headpos.position;
+        angle2player = Vector3.Angle(playerdir, transform.forward);
+        Debug.DrawRay(headpos.position, playerdir);
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, playerDir, out hit))
+        if (Physics.Raycast(headpos.position, playerdir, out hit))
         {
-            // Hey can you see the player
-            if(hit.collider.CompareTag("Player") && angleToPlayer <= FOV)
+            if (hit.collider.CompareTag("Player") && angle2player <= fov)
             {
                 agent.SetDestination(GameManager.instance.player.transform.position);
-
                 if (agent.remainingDistance <= agent.stoppingDistance)
                 {
                     faceTarget();
                 }
-
-                if (!isShooting)
+                if (!isshooting)
                 {
                     StartCoroutine(shoot());
                 }
+                agent.stoppingDistance = stoppingdistorig;
                 return true;
             }
         }
-
         return false;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.CompareTag("Player"))
+        {
+            playerinrange = true;
+        }
+    } 
+
+    private void OnTriggerExit(Collider other)
+    {
+        if(other.CompareTag("Player"))
+        {
+            playerinrange = false;
+            agent.stoppingDistance = 0;
+        }
     }
 
     void faceTarget()
     {
-        Quaternion rot = Quaternion.LookRotation(new Vector3(playerDir.x, 0, playerDir.z));
-        transform.rotation = Quaternion.Lerp(transform.rotation, rot, Time.deltaTime * faceTargetSpeed);
+        Quaternion rot = Quaternion.LookRotation(new Vector3(playerdir.x, 0, playerdir.z));
+        transform.rotation = Quaternion.Lerp(transform.rotation, rot, Time.deltaTime * facetargetspeed);
     }
 
     public void takeDamage(int amount)
     {
-        HP -= amount;
-
+        hp -= amount;
+        if (agent != null && agent.isActiveAndEnabled)
+        {
+            agent.SetDestination(GameManager.instance.player.transform.position); // Go to player last know location
+        }
+        if (cor != null)
+        {
+            StopCoroutine(cor);
+            isroaming = false;
+        }
         StartCoroutine(flashRed());
-
-        if (HP <= 0)
+        if (hp <= 0)
         {
             GameManager.instance.updateGameGoal(-1);
+            agent.enabled = false;
             Destroy(gameObject);
         }
     }
@@ -120,15 +155,14 @@ public class EnemyAI : MonoBehaviour, IDamage
     {
         model.sharedMaterial.color = Color.red;
         yield return new WaitForSeconds(0.1f);
-        model.sharedMaterial.color = colorOrig;
+        model.sharedMaterial.color = colororig;
     }
 
     IEnumerator shoot()
     {
-        isShooting = true;
-        Instantiate(bullet, shootPos.position, transform.rotation);
-
-        yield return new WaitForSeconds(shootRate);
-        isShooting = false;
+        isshooting = true;
+        Instantiate(bullet, shootpos.position, transform.rotation);
+        yield return new WaitForSeconds(shootrate);
+        isshooting = false;
     }
 }

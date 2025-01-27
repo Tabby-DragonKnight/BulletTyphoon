@@ -141,7 +141,7 @@ GameObject:
   - component: {fileID: 1065677828585618802}
   - component: {fileID: 2815394770530304734}
   m_Layer: 0
-  m_Name: TurtleShellPolyart
+  m_Name: Turtle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -201,15 +201,17 @@ MonoBehaviour:
   agent: {fileID: 5198774000009956633}
   anim: {fileID: 6156412611751742350}
   model: {fileID: -2645411136282282034, guid: 942e6d5330e147fe84c5ab6ab2193ca1, type: 3}
-  shootPos: {fileID: 1936113735704883084}
-  headPos: {fileID: 2829482161858124039}
-  HP: 3
-  faceTargetSpeed: 3
-  FOV: 45
-  animSpeedTrans: 5
+  shootpos: {fileID: 0}
+  headpos: {fileID: 0}
+  hp: 3
+  facetargetspeed: 4
+  fov: 30
+  animspeedtrans: 0
   bullet: {fileID: 432777288651349909, guid: ba0b6b578b612054184131a808bc8137, type: 3}
-  shootRate: 4
+  shootrate: 2
   shootrange: 5
+  roampause: 2
+  roamdist: 10
 --- !u!195 &5198774000009956633
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -274,7 +276,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 30
+  m_Radius: 20
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &991760872898268013
 GameObject:

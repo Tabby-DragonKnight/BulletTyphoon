@@ -399,7 +399,7 @@ GameObject:
   - component: {fileID: 6630443145339462249}
   - component: {fileID: 6714166814335769732}
   m_Layer: 0
-  m_Name: SlimePolyart
+  m_Name: Slime
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -459,15 +459,17 @@ MonoBehaviour:
   agent: {fileID: 6714166814335769732}
   anim: {fileID: 8951365849954197011}
   model: {fileID: 4741657342573909016}
-  shootPos: {fileID: 9162900748341811911}
-  headPos: {fileID: 1439470897290709962}
-  HP: 5
-  faceTargetSpeed: 3
-  FOV: 180
-  animSpeedTrans: 2
+  shootpos: {fileID: 0}
+  headpos: {fileID: 0}
+  hp: 5
+  facetargetspeed: 4
+  fov: 30
+  animspeedtrans: 5
   bullet: {fileID: 432777288651349909, guid: ba0b6b578b612054184131a808bc8137, type: 3}
-  shootRate: 5
+  shootrate: 2
   shootrange: 10
+  roampause: 2
+  roamdist: 10
 --- !u!135 &2934397159696065577
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -487,7 +489,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 30
+  m_Radius: 20
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!136 &6630443145339462249
 CapsuleCollider:
